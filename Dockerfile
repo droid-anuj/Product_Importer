@@ -20,5 +20,5 @@ COPY . .
 # Create upload directory
 RUN mkdir -p /tmp/uploads
 
-# Run migrations and start server
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run Celery + FastAPI in same container
+CMD ["sh", "-c", "celery -A celery_app worker --loglevel=info & uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
