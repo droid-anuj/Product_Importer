@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Importer - Complete Product Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .modal-open { overflow: hidden; }
+        
+        .loading-spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .table-responsive { overflow-x: auto; }
+        
+        .btn-primary {
+            @apply bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition;
+        }
+        
+        .btn-success {
+            @apply bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition;
+        }
+        
+        .btn-danger {
+            @apply bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition;
+        }
+        
+        .btn-warning {
+            @apply bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg transition;
+        }
+        
+        .btn-small {
+            @apply px-2 py-1 rounded text-sm font-medium;
+        }
+        
+        .card {
+            @apply bg-white rounded-lg shadow p-6 fade-in;
+        }
+        
+        .nav-tab.active {
+            @apply bg-blue-100 text-blue-600 border-b-2 border-blue-600;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation Header -->
+    <nav class="bg-white shadow">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <i class="fas fa-boxes text-blue-600 text-3xl mr-3"></i>
+                    <h1 class="text-2xl font-bold text-gray-800">Product Importer</h1>
+                    <p class="text-gray-500 ml-4">Complete Product Management System</p>
+                </div>
+                <div class="text-right">
+                    <p id="total-products" class="text-sm text-gray-600">Total Products: <span class="font-bold text-blue-600">0</span></p>
+                    <p class="text-xs text-gray-500 mt-1">Last Updated: <span id="last-updated">Never</span></p>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Tab Navigation -->
+    <div class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex space-x-8">
+                <button class="nav-tab active py-4 px-2 border-b-2 border-blue-600 text-blue-600 font-medium transition" data-tab="dashboard">
+                    <i class="fas fa-home mr-2"></i>Dashboard
+                </button>
+                <button class="nav-tab py-4 px-2 border-b-2 border-transparent text-gray-600 hover:text-gray-800 transition" data-tab="upload">
+                    <i class="fas fa-upload mr-2"></i>Import CSV
+                </button>
+                <button class="nav-tab py-4 px-2 border-b-2 border-transparent text-gray-600 hover:text-gray-800 transition" data-tab="products">
+                    <i class="fas fa-list mr-2"></i>Products
+                </button>
+                <button class="nav-tab py-4 px-2 border-b-2 border-transparent text-gray-600 hover:text-gray-800 transition" data-tab="webhooks">
+                    <i class="fas fa-webhook mr-2"></i>Webhooks
+                </button>
+                <button class="nav-tab py-4 px-2 border-b-2 border-transparent text-gray-600 hover:text-gray-800 transition" data-tab="settings">
+                    <i class="fas fa-cog mr-2"></i>Settings
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 py-8">
+
+        <!-- DASHBOARD TAB -->
+        <div id="dashboard-tab" class="tab-content">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div class="card bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-blue-100 text-sm">Total Products</p>
+                            <p class="text-4xl font-bold mt-2" id="stat-total">0</p>
+                        </div>
+                        <i class="fas fa-boxes text-3xl opacity-20"></i>
+                    </div>
+                    <p class="text-xs text-blue-100 mt-4">Managed in system</p>
+                </div>
+
+                <div class="card bg-gradient-to-br from-green-500 to-green-600 text-white">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-green-100 text-sm">Active Products</p>
+                            <p class="text-4xl font-bold mt-2" id="stat-active">0</p>
+                        </div>
+                        <i class="fas fa-check-circle text-3xl opacity-20"></i>
+                    </div>
+                    <p class="text-xs text-green-100 mt-4">Ready for sale</p>
+                </div>
+
+                <div class="card bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-purple-100 text-sm">Total Value</p>
+                            <p class="text-4xl font-bold mt-2" id="stat-value">$0</p>
+                        </div>
+                        <i class="fas fa-dollar-sign text-3xl opacity-20"></i>
+                    </div>
+                    <p class="text-xs text-purple-100 mt-4">Inventory value</p>
+                </div>
+
+                <div class="card bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-orange-100 text-sm">Webhooks</p>
+                            <p class="text-4xl font-bold mt-2" id="stat-webhooks">0</p>
+                        </div>
+                        <i class="fas fa-exchange-alt text-3xl opacity-20"></i>
+                    </div>
+                    <p class="text-xs text-orange-100 mt-4">Active integrations</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="card">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-chart-bar mr-2 text-blue-600"></i>Quick Actions
+                    </h3>
+                    <div class="space-y-3">
+                        <button onclick="switchTab('upload')" class="w-full btn-primary flex items-center justify-center">
+                            <i class="fas fa-cloud-upload-alt mr-2"></i>Import Products from CSV
+                        </button>
+                        <button onclick="switchTab('products')" class="w-full btn-success flex items-center justify-center">
+                            <i class="fas fa-plus-circle mr-2"></i>Create New Product
+                        </button>
+                        <button onclick="switchTab('webhooks')" class="w-full btn-warning flex items-center justify-center">
+                            <i class="fas fa-webhook mr-2"></i>Manage Webhooks
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-info-circle mr-2 text-blue-600"></i>System Status
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-3 bg-green-50 rounded border border-green-200">
+                            <span class="text-gray-700">Database Connection</span>
+                            <span class="px-3 py-1 bg-green-200 text-green-800 rounded-full text-sm font-medium">✓ Connected</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-green-50 rounded border border-green-200">
+                            <span class="text-gray-700">API Server</span>
+                            <span class="px-3 py-1 bg-green-200 text-green-800 rounded-full text-sm font-medium">✓ Running</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-blue-50 rounded border border-blue-200">
+                            <span class="text-gray-700">Celery Worker</span>
+                            <span class="px-3 py-1 bg-blue-200 text-blue-800 rounded-full text-sm font-medium">✓ Ready</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- UPLOAD CSV TAB -->
+        <div id="upload-tab" class="tab-content hidden">
+            <div class="card">
+                <h2 class="text-3xl font-bold mb-6">
+                    <i class="fas fa-cloud-upload-alt mr-2 text-blue-600"></i>Import Products from CSV
+                </h2>
+                
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded">
+                    <p class="text-blue-700 font-medium">📋 CSV Format Required</p>
+                    <p class="text-blue-600 text-sm mt-2">Your CSV must have these columns:</p>
+                    <p class="font-mono text-xs text-blue-600 mt-2 bg-white p-2 rounded">sku, name, description (optional), price (optional), quantity (optional), active (optional)</p>
+                </div>
+
+                <form id="upload-form" class="space-y-6">
+                    <!-- Drag & Drop Zone -->
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-blue-500 transition cursor-pointer bg-gray-50 hover:bg-blue-50" id="drop-zone">
+                        <i class="fas fa-file-csv text-5xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-700 font-medium mb-2">Drag your CSV file here</p>
+                        <p class="text-gray-500 text-sm mb-4">or</p>
+                        <button type="button" class="btn-primary inline-block">
+                            <i class="fas fa-folder-open mr-2"></i>Click to browse
+                        </button>
+                        <input type="file" id="file-input" accept=".csv" style="display: none;">
+                    </div>
+
+                    <!-- Selected File Info -->
+                    <div id="file-info" class="hidden p-4 bg-green-50 border border-green-200 rounded">
+                        <p class="text-green-700 font-medium">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            <span id="file-name"></span>
+                        </p>
+                        <p class="text-green-600 text-sm mt-1" id="file-size"></p>
+                    </div>
+
+                    <button type="submit" class="w-full btn-success text-lg py-3" id="upload-btn" disabled>
+                        <i class="fas fa-upload mr-2"></i>Start Upload
+                    </button>
+                </form>
+
+                <!-- Upload Progress -->
+                <div id="progress-section" class="hidden mt-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
+                    <h3 class="text-lg font-bold mb-4">Upload Progress</h3>
+                    
+                    <!-- Progress Bar -->
+                    <div class="mb-6">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-700">Overall Progress</span>
+                            <span id="progress-percent" class="text-sm font-bold text-blue-600">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-300 rounded-full h-3 overflow-hidden">
+                            <div id="progress-bar" class="bg-blue-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Cards -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-white p-4 rounded border border-gray-200">
+                            <p class="text-gray-500 text-sm">Total Rows</p>
+                            <p class="text-3xl font-bold text-gray-800" id="total-rows">0</p>
+                        </div>
+                        <div class="bg-white p-4 rounded border border-gray-200">
+                            <p class="text-gray-500 text-sm">Processed</p>
+                            <p class="text-3xl font-bold text-blue-600" id="processed-rows">0</p>
+                        </div>
+                        <div class="bg-white p-4 rounded border border-gray-200">
+                            <p class="text-gray-500 text-sm">Created</p>
+                            <p class="text-3xl font-bold text-green-600" id="created-count">0</p>
+                        </div>
+                        <div class="bg-white p-4 rounded border border-gray-200">
+                            <p class="text-gray-500 text-sm">Updated</p>
+                            <p class="text-3xl font-bold text-yellow-600" id="updated-count">0</p>
+                        </div>
+                    </div>
+
+                    <!-- Status Message -->
+                    <div class="p-4 bg-white border border-gray-200 rounded">
+                        <p class="text-sm font-medium text-gray-700 mb-2">Status</p>
+                        <p id="status-text" class="text-lg text-gray-700 font-medium">Initializing...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRODUCTS TAB -->
+        <div id="products-tab" class="tab-content hidden">
+            <div class="card">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold">
+                        <i class="fas fa-list mr-2 text-blue-600"></i>Manage Products
+                    </h2>
+                    <div class="space-x-2">
+                        <button id="create-product-btn" class="btn-success">
+                            <i class="fas fa-plus-circle mr-2"></i>New Product
+                        </button>
+                        <button id="refresh-products-btn" class="btn-primary">
+                            <i class="fas fa-sync-alt mr-2"></i>Refresh
+                        </button>
+                        <button id="bulk-delete-btn" class="btn-danger">
+                            <i class="fas fa-trash-alt mr-2"></i>Delete All
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters Section -->
+                <div class="bg-gray-50 p-4 rounded-lg mb-6 border border-gray-200">
+                    <p class="text-sm font-bold text-gray-700 mb-4">🔍 Filter & Search</p>
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                        <input type="text" id="filter-sku" placeholder="Filter by SKU..." class="border border-gray-300 rounded px-3 py-2 text-sm">
+                        <input type="text" id="filter-name" placeholder="Filter by Name..." class="border border-gray-300 rounded px-3 py-2 text-sm">
+                        <select id="filter-active" class="border border-gray-300 rounded px-3 py-2 text-sm">
+                            <option value="">All Statuses</option>
+                            <option value="true">Active Only</option>
+                            <option value="false">Inactive Only</option>
+                        </select>
+                        <button id="apply-filters-btn" class="btn-primary text-sm">
+                            <i class="fas fa-filter mr-1"></i>Apply
+                        </button>
+                        <button id="clear-filters-btn" class="bg-gray-400 hover:bg-gray-500 text-white px-3 py-2 rounded text-sm">
+                            <i class="fas fa-times mr-1"></i>Clear
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Products Table -->
+                <div class="table-responsive border border-gray-200 rounded-lg overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-gray-100 border-b">
+                            <tr>
+                                <th class="px-4 py-3 text-left font-bold text-gray-700">SKU</th>
+                                <th class="px-4 py-3 text-left font-bold text-gray-700">Name</th>
+                                <th class="px-4 py-3 text-left font-bold text-gray-700">Price</th>
+                                <th class="px-4 py-3 text-left font-bold text-gray-700">Qty</th>
+                                <th class="px-4 py-3 text-left font-bold text-gray-700">Status</th>
+                                <th class="px-4 py-3 text-left font-bold text-gray-700">Created</th>
+                                <th class="px-4 py-3 text-center font-bold text-gray-700">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="products-table" class="divide-y">
+                            <tr class="text-center py-8">
+                                <td colspan="7" class="text-gray-500">
+                                    <div class="flex justify-center">
+                                        <div class="loading-spinner"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="mt-6 flex justify-center gap-2 items-center">
+                    <button id="prev-page-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                        <i class="fas fa-chevron-left mr-2"></i>Previous
+                    </button>
+                    <span id="pagination-info" class="py-2 px-4 font-medium">Page 1 of 1</span>
+                    <button id="next-page-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                        Next<i class="fas fa-chevron-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- WEBHOOKS TAB -->
+        <div id="webhooks-tab" class="tab-content hidden">
+            <div class="card">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold">
+                        <i class="fas fa-webhook mr-2 text-blue-600"></i>Webhook Management
+                    </h2>
+                    <button id="create-webhook-btn" class="btn-success">
+                        <i class="fas fa-plus-circle mr-2"></i>New Webhook
+                    </button>
+                </div>
+
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded">
+                    <p class="text-blue-700 font-medium">🔗 What are Webhooks?</p>
+                    <p class="text-blue-600 text-sm mt-2">Webhooks allow you to receive real-time notifications about product changes. We'll send HTTP POST requests to your URL when events occur.</p>
+                </div>
+
+                <div id="webhooks-list" class="space-y-4">
+                    <p class="text-gray-500 text-center py-8">
+                        <i class="fas fa-spinner fa-spin mr-2"></i>Loading webhooks...
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SETTINGS TAB -->
+        <div id="settings-tab" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="card">
+                    <h3 class="text-2xl font-bold mb-6">
+                        <i class="fas fa-sliders-h mr-2 text-blue-600"></i>API Configuration
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">API Base URL</label>
+                            <input type="text" id="setting-api-url" value="/api" class="w-full border border-gray-300 rounded px-3 py-2">
+                            <p class="text-xs text-gray-500 mt-1">Default: /api (relative) or https://api.example.com (absolute)</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Items per page</label>
+                            <input type="number" id="setting-page-size" value="20" min="5" max="100" class="w-full border border-gray-300 rounded px-3 py-2">
+                        </div>
+                        <button class="w-full btn-primary">
+                            <i class="fas fa-save mr-2"></i>Save Settings
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="text-2xl font-bold mb-6">
+                        <i class="fas fa-info-circle mr-2 text-blue-600"></i>About This App
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="p-3 bg-gray-50 rounded">
+                            <p class="text-sm text-gray-600">App Name</p>
+                            <p class="font-bold text-gray-800">Product Importer</p>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded">
+                            <p class="text-sm text-gray-600">Version</p>
+                            <p class="font-bold text-gray-800">1.0.0</p>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded">
+                            <p class="text-sm text-gray-600">Built with</p>
+                            <p class="font-bold text-gray-800">FastAPI + React-like Vanilla JS</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Product Modal -->
+    <div id="product-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-white border-b border-gray-200 p-6 flex justify-between items-center">
+                <h3 class="text-2xl font-bold" id="product-modal-title">Create Product</h3>
+                <button onclick="closeProductModal()" class="text-gray-500 hover:text-gray-700 text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="product-form" class="p-6 space-y-4">
+                <input type="hidden" id="product-id">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">SKU *</label>
+                        <input type="text" id="product-sku" placeholder="e.g., PROD-001" class="w-full border border-gray-300 rounded px-3 py-2" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Product Name *</label>
+                        <input type="text" id="product-name" placeholder="e.g., Blue T-Shirt" class="w-full border border-gray-300 rounded px-3 py-2" required>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Description</label>
+                    <textarea id="product-description" placeholder="Product description..." class="w-full border border-gray-300 rounded px-3 py-2 h-24"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Price ($)</label>
+                        <input type="number" id="product-price" placeholder="0.00" step="0.01" min="0" class="w-full border border-gray-300 rounded px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Quantity</label>
+                        <input type="number" id="product-quantity" placeholder="0" min="0" class="w-full border border-gray-300 rounded px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Status</label>
+                        <select id="product-active" class="w-full border border-gray-300 rounded px-3 py-2">
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-200 pt-4 flex gap-2">
+                    <button type="submit" class="flex-1 btn-primary text-lg py-2">
+                        <i class="fas fa-save mr-2"></i>Save Product
+                    </button>
+                    <button type="button" class="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 rounded-lg" onclick="closeProductModal()">
+                        <i class="fas fa-times mr-2"></i>Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Webhook Modal -->
+    <div id="webhook-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg max-w-2xl w-full">
+            <div class="border-b border-gray-200 p-6 flex justify-between items-center">
+                <h3 class="text-2xl font-bold" id="webhook-modal-title">Create Webhook</h3>
+                <button onclick="closeWebhookModal()" class="text-gray-500 hover:text-gray-700 text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="webhook-form" class="p-6 space-y-4">
+                <input type="hidden" id="webhook-id">
+                
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Webhook URL *</label>
+                    <input type="url" id="webhook-url" placeholder="https://example.com/webhook" class="w-full border border-gray-300 rounded px-3 py-2" required>
+                    <p class="text-xs text-gray-500 mt-1">The URL where we'll send POST requests</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Event Type *</label>
+                    <select id="webhook-event" class="w-full border border-gray-300 rounded px-3 py-2" required>
+                        <option value="">Select an event type</option>
+                        <option value="product.created">Product Created</option>
+                        <option value="product.updated">Product Updated</option>
+                        <option value="product.deleted">Product Deleted</option>
+                        <option value="import.completed">CSV Import Completed</option>
+                        <option value="import.failed">CSV Import Failed</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="flex items-center">
+                        <input type="checkbox" id="webhook-enabled" class="w-4 h-4 rounded" checked>
+                        <span class="ml-3 font-medium text-gray-700">Enable this webhook</span>
+                    </label>
+                </div>
+
+                <div class="border-t border-gray-200 pt-4 flex gap-2">
+                    <button type="submit" class="flex-1 btn-primary text-lg py-2">
+                        <i class="fas fa-save mr-2"></i>Save Webhook
+                    </button>
+                    <button type="button" class="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 rounded-lg" onclick="closeWebhookModal()">
+                        <i class="fas fa-times mr-2"></i>Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- COMPLETION MODAL -->
+    <div id="completion-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full overflow-hidden">
+            <div class="bg-green-500 px-6 py-4 flex items-center justify-between">
+                <h3 class="text-2xl font-bold text-white flex items-center">
+                    <i class="fas fa-check-circle mr-3"></i>Upload Complete!
+                </h3>
+                <button id="close-completion-modal" class="text-white hover:text-gray-200 text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="p-6">
+                <p class="text-gray-700 mb-6 text-center text-lg font-medium">CSV has been successfully imported!</p>
+
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div class="bg-green-50 p-4 rounded border-2 border-green-300 text-center">
+                        <p class="text-gray-600 text-sm font-medium">Created</p>
+                        <p class="text-3xl font-bold text-green-600" id="modal-created">0</p>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded border-2 border-yellow-300 text-center">
+                        <p class="text-gray-600 text-sm font-medium">Updated</p>
+                        <p class="text-3xl font-bold text-yellow-600" id="modal-updated">0</p>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded border-2 border-red-300 text-center">
+                        <p class="text-gray-600 text-sm font-medium">Failed</p>
+                        <p class="text-3xl font-bold text-red-600" id="modal-failed">0</p>
+                    </div>
+                </div>
+
+                <button id="completion-ok-btn" class="w-full btn-success text-lg py-3">
+                    <i class="fas fa-thumbs-up mr-2"></i>Great! Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ERROR MODAL -->
+    <div id="error-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full overflow-hidden">
+            <div class="bg-red-500 px-6 py-4 flex items-center justify-between">
+                <h3 class="text-2xl font-bold text-white flex items-center">
+                    <i class="fas fa-exclamation-circle mr-3"></i>Upload Failed
+                </h3>
+                <button id="close-error-modal" class="text-white hover:text-gray-200 text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="p-6">
+                <p class="text-gray-700 mb-6 text-center text-base">
+                    <strong>Error:</strong>
+                    <br>
+                    <span id="error-message-text">Unknown error occurred</span>
+                </p>
+
+                <button id="error-ok-btn" class="w-full btn-danger text-lg py-3">
+                    <i class="fas fa-times mr-2"></i>Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/static/api.js"></script>
+    <script src="/static/upload.js"></script>
+    <script src="/static/products.js"></script>
+    <script src="/static/webhooks.js"></script>
+    <script src="/static/app.js"></script>
+</body>
+</html>

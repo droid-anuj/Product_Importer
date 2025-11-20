@@ -1,0 +1,21 @@
+sku,name,description,price,quantity,active
+SKU001,Blue T-Shirt,Comfortable 100% cotton t-shirt,29.99,150,true
+SKU002,Red Baseball Cap,Classic baseball cap with leather strap,19.99,75,true
+SKU003,Black Running Shoes,Professional running shoes with gel cushioning,89.99,40,true
+SKU004,White Socks Pack,Pack of 5 pairs comfortable socks,9.99,200,true
+SKU005,Green Windbreaker,Waterproof windbreaker jacket,149.99,25,true
+SKU006,Blue Jeans,Classic blue denim jeans,59.99,100,true
+SKU007,Brown Leather Belt,Genuine leather belt with metal buckle,39.99,60,true
+SKU008,Gray Hoodie,Soft fleece lined hoodie,49.99,80,true
+SKU009,Black Beanie,Warm winter beanie,14.99,120,true
+SKU010,White Sneakers,Casual white canvas sneakers,44.99,90,true
+SKU011,Striped Polo,Casual striped polo shirt,34.99,70,true
+SKU012,Navy Shorts,Comfortable navy cotton shorts,24.99,110,true
+SKU013,Purple Scarf,Soft wool winter scarf,29.99,45,true
+SKU014,Orange Sunglasses,UV protection sunglasses,79.99,35,true
+SKU015,Yellow Raincoat,Bright yellow waterproof raincoat,59.99,30,true
+SKU016,Pink Tank Top,Sleeveless pink tank top,19.99,85,true
+SKU017,Khaki Pants,Business casual khaki pants,54.99,75,true
+SKU018,Teal Cardigan,Button-up cardigan sweater,44.99,60,true
+SKU019,Maroon Scarf,Warm maroon wool scarf,24.99,50,true
+SKU020,Burgundy Dress,Elegant burgundy evening dress,89.99,20,true
